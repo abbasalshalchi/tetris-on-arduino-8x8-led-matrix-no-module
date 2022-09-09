@@ -19,8 +19,11 @@
 #define C6 A1
 #define C7 A2
 #define C8 A3
+//____________________________________________variables____________________________________________
+int FrameFlag;
+/*const*/ int FrameFlagLimit = 10;
 int pause = 2000; //in micros
-int Matrix [8] [8] = {
+bool Matrix [8] [8] = {
   {0, 0, 0, 0, 1, 1, 1, 1},
   {0, 0, 0, 0, 1, 1, 1, 1},
   {0, 0, 0, 0, 1, 1, 1, 1},
@@ -30,6 +33,15 @@ int Matrix [8] [8] = {
   {1, 1, 1, 1, 0, 0, 0, 0},
   {1, 1, 1, 1, 0, 0, 0, 0},
 };
+bool blockmapout[4][4] = {
+  {1, 1, 1, 1},
+  {1, 1, 1, 1},
+  {1, 1, 1, 1},
+  {1, 1, 1, 1},
+};
+void Clear() {               //clearer
+  for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) Matrix[i][j] = 0; //clearer for pixels
+}
 //________________________________classes________________________________
 class Button {
   private:
@@ -56,11 +68,32 @@ class Button {
       Reverse = reverse;
     }
 };
+class Block {
+  private:
+    bool BlockMap[4][4];
+    unsigned short Px;
+    unsigned short Py;
+  public:
+    void StillShow() {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Px][j + Py] = BlockMap[i][j];
+    }
+    //test fun
+    void parameterShow(short x,short y){
+      Px = x;
+      Py = y;
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Px][j + Py] = BlockMap[i][j];
+    }
+    Block(bool blockMap[4][4]) {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
+    }
+};
 Button UpStick(18, 0);
 Button DownStick(18, 1);
 Button RightStick(19, 0);
 Button LeftStick(19, 1);
+Block block(blockmapout);
 void setup() {
+  FrameFlag = 0;
   pinMode(1, INPUT);
   pinMode(A4, INPUT);
   pinMode(A5, INPUT);
@@ -124,57 +157,14 @@ void Set_LED_in_Active_Row(int column, int state) {
 }
 
 void loop() {
-  static int Cat1 [8] [8] = {
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-  };
-  static int Cat2 [8] [8] = {
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 0, 0, 0, 0},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-    {0, 0, 0, 0, 1, 1, 1, 1},
-  };
-  static int Cat3 [8] [8] = {
-    {0, 0, 1, 1, 0, 0, 0, 0},
-    {0, 0, 0, 1, 0, 1, 1, 0},
-    {1, 0, 0, 0, 0, 0, 1, 0},
-    {1, 1, 0, 1, 1, 0, 0, 0},
-    {0, 0, 0, 1, 1, 0, 1, 1},
-    {0, 1, 0, 0, 0, 0, 0, 1},
-    {0, 1, 1, 0, 1, 0, 0, 0},
-    {0, 0, 0, 0, 1, 1, 0, 0},
-  };
-  static int Cat4 [8] [8] = {
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 1, 1, 1, 1, 0, 0},
-    {0, 0, 1, 1, 1, 1, 0, 0},
-    {0, 0, 1, 1, 1, 1, 0, 0},
-    {0, 0, 1, 1, 1, 1, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-  };
-  static int Cat5 [8] [8] = {
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 0, 0, 0, 0, 1, 1},
-    {1, 1, 0, 0, 0, 0, 1, 1},
-    {1, 1, 0, 0, 0, 0, 1, 1},
-    {1, 1, 0, 0, 0, 0, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1},
-  };
-  if (UpStick.CButton())for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)Matrix[i][j] = Cat1[i][j]; else if (DownStick.CButton()) for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)Matrix[i][j] = Cat2[i][j]; else if (RightStick.CButton()) for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)Matrix[i][j] = Cat4[i][j]; else if (LeftStick.CButton()) for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)Matrix[i][j] = Cat5[i][j]; else for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)Matrix[i][j] = Cat3[i][j];
+  Clear();
+  if (FrameFlag < FrameFlagLimit)FrameFlag++; else {
+    FrameFlag = 0;
+    //frame show
+    block.parameterShow(random(5),random(5));
+  }
+  //__________________________________________________still shows__________________________________________________
+  block.StillShow();
   for (int j = 0; j < 8; j++) {
     SelectRow(j + 1);
     for (int i = 0; i < 8; i++) {
