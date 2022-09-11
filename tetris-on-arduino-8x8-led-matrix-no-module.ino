@@ -21,7 +21,7 @@
 #define C8 A3
 //____________________________________________variables____________________________________________
 int FrameFlag;
-/*const*/ int FrameFlagLimit = 10;
+/*const*/ int FrameFlagLimit = 5;
 int pause = 2000; //in micros
 bool Matrix [8] [8] = {
   {0, 0, 0, 0, 1, 1, 1, 1},
@@ -53,11 +53,11 @@ class Button {
     bool CButton() {
       ReadValue = analogRead(Pin);
       if (Reverse) ReadValue = 1023 - ReadValue;
-      if (buttonFlag && ReadValue < 5) {
+      if (buttonFlag && ReadValue < 40) {
         buttonFlag = 0;
         return 1;
       } else {
-        if (ReadValue > 100) {
+        if (ReadValue > 30) {
           buttonFlag = 1;
         }
         return 0;
@@ -74,14 +74,25 @@ class Block {
     unsigned short Px;
     unsigned short Py;
   public:
-    void StillShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Px][j + Py] = BlockMap[i][j];
+    void SetBlockMap(bool blockMap[4][4]) {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
     }
-    //test fun
-    void parameterShow(short x,short y){
-      Px = x;
-      Py = y;
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Px][j + Py] = BlockMap[i][j];
+    void DownShow() {
+
+    }
+    void LeftShow() {
+      if(Px > 0)Px--;
+      StillShow();
+    }
+    void RightShow() {
+      if(Px < 4)Px++;
+      StillShow();
+    }
+    void SpinShow() {
+
+    }
+    void StillShow() {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Py][j + Px] = BlockMap[i][j];
     }
     Block(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
@@ -89,8 +100,8 @@ class Block {
 };
 Button UpStick(18, 0);
 Button DownStick(18, 1);
-Button RightStick(19, 0);
-Button LeftStick(19, 1);
+Button RightStick(19, 1);
+Button LeftStick(19, 0);
 Block block(blockmapout);
 void setup() {
   FrameFlag = 0;
@@ -155,16 +166,31 @@ void Set_LED_in_Active_Row(int column, int state) {
   if (column == 7) digitalWrite(C7, !state);
   if (column == 8) digitalWrite(C8, !state);
 }
-
+//    3
+//  2    1
+//    4
 void loop() {
+  static short BHolder = 0;
   Clear();
-  if (FrameFlag < FrameFlagLimit)FrameFlag++; else {
+  if (FrameFlag < FrameFlagLimit) {
+    //__________________________________________________still shows__________________________________________________
+    FrameFlag++;
+    block.StillShow();
+    if (BHolder == 0) {
+      if (RightStick.CButton())BHolder = 1; else if (LeftStick.CButton())BHolder = 2;
+    }
+  } else {
     FrameFlag = 0;
     //frame show
-    block.parameterShow(random(5),random(5));
+    if (RightStick.CButton() || BHolder == 1) {
+      block.RightShow();
+      BHolder = 0;
+    }else if (LeftStick.CButton() || BHolder == 2) {
+      block.LeftShow();
+      BHolder = 0;
+    }
+    //frame show
   }
-  //__________________________________________________still shows__________________________________________________
-  block.StillShow();
   for (int j = 0; j < 8; j++) {
     SelectRow(j + 1);
     for (int i = 0; i < 8; i++) {
