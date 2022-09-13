@@ -21,23 +21,34 @@
 #define C8 A3
 //____________________________________________variables____________________________________________
 int FrameFlag;
-/*const*/ int FrameFlagLimit = 5;
+/*const*/ int FrameFlagLimit = 10;
 int pause = 2000; //in micros
 bool Matrix [8] [8] = {
-  {0, 0, 0, 0, 1, 1, 1, 1},
-  {0, 0, 0, 0, 1, 1, 1, 1},
-  {0, 0, 0, 0, 1, 1, 1, 1},
-  {0, 0, 0, 0, 1, 1, 1, 1},
-  {1, 1, 1, 1, 0, 0, 0, 0},
-  {1, 1, 1, 1, 0, 0, 0, 0},
-  {1, 1, 1, 1, 0, 0, 0, 0},
-  {1, 1, 1, 1, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+};
+bool StillMatrix [9] [9] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
-  {1, 1, 1, 1},
-  {1, 1, 1, 1},
-  {1, 1, 1, 1},
-  {1, 1, 1, 1},
+  {0, 0, 1, 0},
+  {0, 1, 1, 0},
+  {0, 1, 1, 0},
+  {0, 0, 0, 0},
 };
 void Clear() {               //clearer
   for (int i = 0; i < 8; i++) for (int j = 0; j < 8; j++) Matrix[i][j] = 0; //clearer for pixels
@@ -53,7 +64,7 @@ class Button {
     bool CButton() {
       ReadValue = analogRead(Pin);
       if (Reverse) ReadValue = 1023 - ReadValue;
-      if (buttonFlag && ReadValue < 40) {
+      if (buttonFlag && ReadValue < 100) {
         buttonFlag = 0;
         return 1;
       } else {
@@ -77,29 +88,46 @@ class Block {
     void SetBlockMap(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
     }
-    void DownShow() {
-
+    void FallShow() {
+      Py = 4;
+      StillShow();
     }
     void LeftShow() {
-      if(Px > 0)Px--;
+      if (Px > 0)Px--;
       StillShow();
     }
     void RightShow() {
-      if(Px < 4)Px++;
-      StillShow();
+      static short level;
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[j][3 - i] == 1) {
+            level = i;
+            if (StillMatrix[Py][Px + 4 - level] == 0) {
+              Px++;
+              return;
+            } else return;
+          }
     }
     void SpinShow() {
-
+      StillShow();
     }
     void StillShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)Matrix[i + Py][j + Px] = BlockMap[i][j];
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = BlockMap[i][j];
+    }
+    void GShow() {
+      static short level;
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[3 - i][j] == 1) {
+            level = i;
+            if (StillMatrix[Py + 4 - level][Px] == 0) {
+              Py++;
+              return;
+            } else return;
+          }
     }
     Block(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
     }
 };
-Button UpStick(18, 0);
-Button DownStick(18, 1);
+Button UpStick(18, 1);
+Button DownStick(18, 0);
 Button RightStick(19, 1);
 Button LeftStick(19, 0);
 Block block(blockmapout);
@@ -169,26 +197,29 @@ void Set_LED_in_Active_Row(int column, int state) {
 //    3
 //  2    1
 //    4
+//functions
+void MoveBlock(bool frame) {
+  if (frame) block.GShow();
+  if (RightStick.CButton()) {
+    block.RightShow();
+  } else if (LeftStick.CButton()) {
+    block.LeftShow();
+  } else if (UpStick.CButton()) {
+    block.SpinShow();
+  } else if (DownStick.CButton()) {
+    block.FallShow();
+  } else block.StillShow();
+}
 void loop() {
-  static short BHolder = 0;
   Clear();
   if (FrameFlag < FrameFlagLimit) {
-    //__________________________________________________still shows__________________________________________________
     FrameFlag++;
-    block.StillShow();
-    if (BHolder == 0) {
-      if (RightStick.CButton())BHolder = 1; else if (LeftStick.CButton())BHolder = 2;
-    }
+    //__________________________________________________still shows__________________________________________________
+    MoveBlock(0);
   } else {
     FrameFlag = 0;
     //frame show
-    if (RightStick.CButton() || BHolder == 1) {
-      block.RightShow();
-      BHolder = 0;
-    }else if (LeftStick.CButton() || BHolder == 2) {
-      block.LeftShow();
-      BHolder = 0;
-    }
+    MoveBlock(1);
     //frame show
   }
   for (int j = 0; j < 8; j++) {
