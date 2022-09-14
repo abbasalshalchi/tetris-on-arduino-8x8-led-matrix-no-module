@@ -42,7 +42,7 @@ bool StillMatrix [10] [10] = {
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 1, 0, 0, 0, 1},
-  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 1, 0, 0, 0, 1},
   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
@@ -83,8 +83,8 @@ class Button {
 class Block {
   private:
     bool BlockMap[4][4];
-    unsigned short Px = 0;
-    unsigned short Py = 0;
+    unsigned short Px = 2;
+    unsigned short Py = -1;
   public:
     void VerifyBlock() { //verify if should be killed
 
