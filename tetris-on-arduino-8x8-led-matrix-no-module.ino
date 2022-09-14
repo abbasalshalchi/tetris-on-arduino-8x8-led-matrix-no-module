@@ -41,8 +41,8 @@ bool StillMatrix [10] [10] = {
   {1, 1, 1, 1, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 0, 0, 1, 1, 1, 0, 0, 1},
-  {1, 1, 0, 0, 1, 0, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 1, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
@@ -83,8 +83,8 @@ class Button {
 class Block {
   private:
     bool BlockMap[4][4];
-    unsigned short Px;
-    unsigned short Py;
+    unsigned short Px = 0;
+    unsigned short Py = 0;
   public:
     void VerifyBlock() { //verify if should be killed
 
@@ -106,22 +106,19 @@ class Block {
     }
     void LeftShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
-      StillShow();
     }
     void RightShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j + 2] == 1)return; Px++;
-      StillShow();
     }
     void SpinShow() {
-      StillShow();
     }
     void StillShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = 1;
       for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)if (StillMatrix[i + 1][j + 1] == 1) Matrix[i][j] = 1;
+      VerifyBlock();
     }
     void GShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1)return; Py++;
-      StillShow();
     }
     Block(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
@@ -209,7 +206,8 @@ void MoveBlock(bool frame) {
     block.SpinShow();
   } else if (DownStick.CButton()) {
     block.FallShow();
-  } else block.StillShow();
+  } 
+  block.StillShow();
 }
 void loop() {
   Clear();
