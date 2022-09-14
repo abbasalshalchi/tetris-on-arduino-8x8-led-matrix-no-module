@@ -94,16 +94,12 @@ class Block {
     }
     void FallShow() {
       int l = Py;
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) {
-              i = 5;
-              j = 5;
-            } else {
-                l++;
-                i = 0;
-                j = 0;
-            }
-      Py = l - 1;
-    }
+      while(l < 8){
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) return;
+        l++;
+        Py = l;
+      }
+      }
     void LeftShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
     }
