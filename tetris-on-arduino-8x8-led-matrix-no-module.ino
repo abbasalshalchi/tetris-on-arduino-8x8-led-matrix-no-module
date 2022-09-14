@@ -21,7 +21,7 @@
 #define C8 A3
 //____________________________________________variables____________________________________________
 int FrameFlag;
-/*const*/ int FrameFlagLimit = 10;
+/*const*/ int FrameFlagLimit = 20;
 int pause = 2000; //in micros
 bool Matrix [8] [8] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
@@ -33,19 +33,20 @@ bool Matrix [8] [8] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
 };
-bool StillMatrix [9] [9] = {
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 1, 1, 1, 1, 1, 1, 1},
+bool StillMatrix [10] [10] = {
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+  {1, 0, 1, 0, 1, 0, 1, 0, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
-  {0, 0, 1, 0},
+  {0, 0, 0, 0},
   {0, 1, 1, 0},
   {0, 1, 1, 0},
   {0, 0, 0, 0},
@@ -85,6 +86,9 @@ class Block {
     unsigned short Px;
     unsigned short Py;
   public:
+    void KillBlock() {
+
+    }
     void SetBlockMap(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
     }
@@ -93,34 +97,20 @@ class Block {
       StillShow();
     }
     void LeftShow() {
-      if (Px > 0)Px--;
-      StillShow();
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
     }
     void RightShow() {
-      static short level;
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[j][3 - i] == 1) {
-            level = i;
-            if (StillMatrix[Py][Px + 4 - level] == 0) {
-              Px++;
-              return;
-            } else return;
-          }
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j + 2] == 1)return; Px++;
     }
     void SpinShow() {
       StillShow();
     }
     void StillShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = BlockMap[i][j];
-    }
-    void GShow() {
-      static short level;
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[3 - i][j] == 1) {
-            level = i;
-            if (StillMatrix[Py + 4 - level][Px] == 0) {
-              Py++;
-              return;
-            } else return;
-          }
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = 1;
+      for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)if (StillMatrix[i + 1][j + 1] == 1) Matrix[i][j] = 1;
+        }
+  void GShow() {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1)return; Py++;
     }
     Block(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
