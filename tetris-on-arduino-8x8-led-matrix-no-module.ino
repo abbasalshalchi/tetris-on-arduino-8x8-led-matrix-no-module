@@ -38,11 +38,11 @@ bool StillMatrix [10] [10] = {
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 1, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 0, 1, 0, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
@@ -83,53 +83,69 @@ class Button {
 };
 class Block {
   private:
+    //bool TempMatrix[8][8];// for matrix falling when deleting rows
     bool TempBlockMap[4][4]; //for spinning
     bool BlockMap[4][4];
     unsigned short Px = 2;
     unsigned short Py = -1;
   public:
-    void VerifyBlock() { //verify if should be killed
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1) {
-              for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 1][j + Px + 1] = 1;
-              Px = 2;
-              Py = -1;
-            }
-    }
-    void SetBlockMap(bool blockMap[4][4]) {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
-    }
-    void FallShow() {
-      int l = Py;
-      while (l < 8) {
-        for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) {
-                VerifyBlock();
-                return;
-              }
-        l++;
-        Py = l;
+    void RowChecking() {
+      for (int i = 0; i < 8; i++) {
+          for (int j = 0; j < 8; j++)if (StillMatrix[8 - i][j + 1] == 0) j = 8; else if (j == 7){
+            for (int l = 0; l < 8; l++)StillMatrix[8 - i][l + 1] = 0;
+            for (int m = 0; m < 8; m++)for (int n = 0; n < 9; n++)StillMatrix[m + 1][n] = StillMatrix[m][n];
+          }
       }
     }
-    void LeftShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
-    }
-    void RightShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j + 2] == 1)return; Px++;
-    }
-    void SpinShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)TempBlockMap[i][j] = BlockMap[i][j];
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = TempBlockMap[j][3 - i];
-    }
-    void StillShow() {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = 1;
-      for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)if (StillMatrix[i + 1][j + 1] == 1) Matrix[i][j] = 1;
-    }
-    void GShow() {
-      //VerifyBlock();
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1)return; Py++;
-    }
-    Block(bool blockMap[4][4]) {
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
-    }
+
+
+void VerifyBlock() { //verify if should be killed
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1) {
+          for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 1][j + Px + 1] = 1;
+          Px = 2;
+          Py = -1;
+        }
+  RowChecking();
+}
+void SetBlockMap(bool blockMap[4][4]) {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
+}
+void FallShow() {
+  int l = Py;
+  while (l < 8) {
+    for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) {
+            VerifyBlock();
+            return;
+          }
+    l++;
+    Py = l;
+  }
+}
+void LeftShow() {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
+}
+void RightShow() {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j + 2] == 1)return; Px++;
+}
+void SpinShow() {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)TempBlockMap[i][j] = BlockMap[i][j];
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = TempBlockMap[j][3 - i];
+}
+void StillShow() {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = 1;
+  for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)if (StillMatrix[i + 1][j + 1] == 1) Matrix[i][j] = 1;
+}
+void GShow() {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1) {
+          VerifyBlock();
+          return;
+        }
+  Py++;
+}
+
+  Block(bool blockMap[4][4]) {
+  for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
+}
 };
 Button UpStick(18, 1);
 Button DownStick(18, 0);
