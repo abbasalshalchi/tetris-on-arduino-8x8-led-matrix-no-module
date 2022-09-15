@@ -34,19 +34,19 @@ bool Matrix [8] [8] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
 };
 bool StillMatrix [10] [10] = {
-  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 1, 1, 0, 0, 0, 0, 0, 1},
+  {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-  {1, 1, 0, 0, 0, 1, 0, 0, 0, 1},
-  {1, 1, 0, 0, 0, 1, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+  {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 bool blockmapout[4][4] = {
-  {0, 0, 0, 0},
+  {0, 0, 1, 0},
   {0, 1, 1, 0},
   {0, 1, 1, 0},
   {0, 0, 0, 0},
@@ -57,6 +57,7 @@ void Clear() {               //clearer
 //________________________________classes________________________________
 class Button {
   private:
+    bool preRead;
     bool buttonFlag; //0 when clicked, 1 when unpressed
     bool Reverse;// reverse read value
     int ReadValue;
@@ -82,24 +83,32 @@ class Button {
 };
 class Block {
   private:
+    bool TempBlockMap[4][4]; //for spinning
     bool BlockMap[4][4];
     unsigned short Px = 2;
     unsigned short Py = -1;
   public:
     void VerifyBlock() { //verify if should be killed
-
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1) {
+              for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 1][j + Px + 1] = 1;
+              Px = 2;
+              Py = -1;
+            }
     }
     void SetBlockMap(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
     }
     void FallShow() {
       int l = Py;
-      while(l < 8){
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) return;
+      while (l < 8) {
+        for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[l + i + 2][Px + j + 1] == 1) {
+                VerifyBlock();
+                return;
+              }
         l++;
         Py = l;
       }
-      }
+    }
     void LeftShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j] == 1)return; Px--;
     }
@@ -107,13 +116,15 @@ class Block {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 1][Px + j + 2] == 1)return; Px++;
     }
     void SpinShow() {
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)TempBlockMap[i][j] = BlockMap[i][j];
+      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = TempBlockMap[j][3 - i];
     }
     void StillShow() {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) Matrix[i + Py][j + Px] = 1;
       for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++)if (StillMatrix[i + 1][j + 1] == 1) Matrix[i][j] = 1;
-      VerifyBlock();
     }
     void GShow() {
+      //VerifyBlock();
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 2][Px + j + 1] == 1)return; Py++;
     }
     Block(bool blockMap[4][4]) {
@@ -202,7 +213,7 @@ void MoveBlock(bool frame) {
     block.SpinShow();
   } else if (DownStick.CButton()) {
     block.FallShow();
-  } 
+  }
   block.StillShow();
 }
 void loop() {
