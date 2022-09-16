@@ -21,6 +21,7 @@
 #define C8 A3
 //____________________________________________variables____________________________________________
 int FrameFlag;
+bool Lost;
 /*const*/ int FrameFlagLimit = 100;
 int pause = 2000; //in micros
 bool Matrix [8] [8] = {
@@ -33,7 +34,17 @@ bool Matrix [8] [8] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
 };
-bool StillMatrix [11] [11] = {
+bool LostMatrix [8] [8] = {
+  {1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 0, 1, 1, 1, 1, 0, 1},
+  {1, 1, 0, 1, 1, 0, 1, 1},
+  {1, 1, 1, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 1, 1, 1},
+  {1, 1, 0, 1, 1, 0, 1, 1},
+  {1, 0, 1, 1, 1, 1, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1},
+};
+bool StillMatrix [11] [10] = {
   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -122,6 +133,9 @@ class Block {
     unsigned short Px = 2;
     unsigned short Py = -1;
   public:
+    void VerifyLose() {
+      for (int i = 1; i < 9; i++)if (StillMatrix[2][i])Lost = 1;
+    }
     void RowChecking() {
       for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++)if (StillMatrix[9 - i][j + 1] == 0) j = 8; else if (j == 7) {
@@ -134,13 +148,17 @@ class Block {
 
 
     void VerifyBlock() { //verify if should be killed
-      for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 3][Px + j + 1] == 1) {
-              for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 2][j + Px + 1] = 1;
-              Px = 2;
-              Py = -1;
-              SetBlockMap(blockmapout[random(7)]);
-            }
-      RowChecking();
+      if (Py >= 0) {   //avoid spawnkill
+        for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 3][Px + j + 1] == 1) {
+                for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 2][j + Px + 1] = 1;
+                Px = 2;
+                Py = -1;
+                VerifyLose();
+                SetBlockMap(blockmapout[random(7)]);
+              }
+        RowChecking();
+        VerifyLose();
+      }
     }
     void SetBlockMap(bool blockMap[4][4]) {
       for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)BlockMap[i][j] = blockMap[i][j];
@@ -188,6 +206,8 @@ Button RightStick(19, 1);
 Button LeftStick(19, 0);
 Block block(blockmapout[1]);
 void setup() {
+  randomSeed(56);
+  Lost = 0;
   FrameFlag = 0;
   pinMode(1, INPUT);
   pinMode(A4, INPUT);
@@ -271,18 +291,35 @@ void MoveBlock(bool frame) {
   block.StillShow();
 }
 void loop() {
-  Clear();
-  if (FrameFlag < FrameFlagLimit) {
-    FrameFlag++;
-    //__________________________________________________still shows__________________________________________________
-    MoveBlock(0);
+  static int lostBlinkDuration = 2000;
+  static int lostBlinkFlag = 0;
+  if (!Lost) {
+    Clear();
+    if (FrameFlag < FrameFlagLimit) {
+      FrameFlag++;
+      //__________________________________________________still shows__________________________________________________
+      MoveBlock(0);
+    } else {
+      FrameFlag = 0;
+      //frame show
+      MoveBlock(1);
+      //frame show
+    }
   } else {
-    FrameFlag = 0;
-    //frame show
-    MoveBlock(1);
-    //frame show
+    for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++) {
+        if (lostBlinkFlag < lostBlinkDuration / 2) {
+          Matrix[i][j] = LostMatrix[i][j];
+          lostBlinkFlag++;
+        } else {
+          Matrix[i][j] = !LostMatrix[i][j];
+          lostBlinkFlag++;
+        }
+        if (lostBlinkFlag > lostBlinkDuration - 1)lostBlinkFlag = 0;
+        StillMatrix[i + 2][j + 1] = 0;
+      }
+    if (DownStick.CButton())Lost = 0;
   }
-  for (int j = 0; j < 8; j++) {
+  for (int j = 0; j < 8; j++) {//stuff for showing
     SelectRow(j + 1);
     for (int i = 0; i < 8; i++) {
       Set_LED_in_Active_Row(i + 1 , Matrix[j][i]);
