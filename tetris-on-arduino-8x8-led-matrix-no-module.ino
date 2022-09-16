@@ -46,11 +46,42 @@ bool StillMatrix [11] [11] = {
   {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
   {0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
-bool blockmapout[4][4] = {
-  {0, 0, 0, 0},
-  {0, 1, 1, 1},
-  {0, 0, 0, 1},
-  {0, 0, 0, 0},
+bool blockmapout[7][4][4] = {{
+    {0, 0, 0, 0},
+    {0, 1, 1, 1},
+    {0, 0, 1, 0},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 1, 0},
+    {0, 0, 1, 0},
+    {0, 1, 1, 0},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 0, 0},
+    {0, 1, 1, 0},
+    {0, 0, 1, 1},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 0, 0},
+    {0, 1, 1, 0},
+    {0, 1, 1, 0},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 0, 0},
+    {0, 0, 1, 1},
+    {0, 1, 1, 0},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 1, 0},
+    {0, 0, 1, 0},
+    {0, 0, 1, 1},
+    {0, 0, 0, 0}
+  }, {
+    {0, 0, 1, 0},
+    {0, 0, 1, 0},
+    {0, 0, 1, 0},
+    {0, 0, 1, 0}
+  }
 };
 
 void Clear() {               //clearer
@@ -107,6 +138,7 @@ class Block {
               for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 2][j + Px + 1] = 1;
               Px = 2;
               Py = -1;
+              SetBlockMap(blockmapout[random(7)]);
             }
       RowChecking();
     }
@@ -154,7 +186,7 @@ Button UpStick(18, 1);
 Button DownStick(18, 0);
 Button RightStick(19, 1);
 Button LeftStick(19, 0);
-Block block(blockmapout);
+Block block(blockmapout[1]);
 void setup() {
   FrameFlag = 0;
   pinMode(1, INPUT);
@@ -223,7 +255,9 @@ void Set_LED_in_Active_Row(int column, int state) {
 //    4
 //functions
 void MoveBlock(bool frame) {
-  if (frame) block.GShow();
+  if (frame) {
+    block.GShow();
+  }
   if (RightStick.CButton()) {
     block.RightShow();
   } else if (LeftStick.CButton()) {
