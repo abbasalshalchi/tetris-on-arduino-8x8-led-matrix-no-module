@@ -151,13 +151,8 @@ class Block {
       if (Py >= 0) {   //avoid spawnkill
         for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 3][Px + j + 1] == 1) {
                 for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 2][j + Px + 1] = 1;
-                Px = 2;
-                Py = -1;
-                VerifyLose();
-                SetBlockMap(blockmapout[random(7)]);
               }
         RowChecking();
-        VerifyLose();
       }
     }
     void SetBlockMap(bool blockMap[4][4]) {
@@ -306,7 +301,8 @@ void loop() {
       //frame show
     }
   } else {
-    for (int i = 0; i < 8; i++)for (int j = 0; j < 8; j++) {
+    if (DownStick.CButton())Lost = 0;
+    for (int i = 0; i < 9; i++)for (int j = 0; j < 8; j++) {
         if (lostBlinkFlag < lostBlinkDuration / 2) {
           Matrix[i][j] = LostMatrix[i][j];
           lostBlinkFlag++;
@@ -315,9 +311,8 @@ void loop() {
           lostBlinkFlag++;
         }
         if (lostBlinkFlag > lostBlinkDuration - 1)lostBlinkFlag = 0;
-        StillMatrix[i + 2][j + 1] = 0;
+        StillMatrix[i + 1][j + 1] = 0;
       }
-    if (DownStick.CButton())Lost = 0;
   }
   for (int j = 0; j < 8; j++) {//stuff for showing
     SelectRow(j + 1);
