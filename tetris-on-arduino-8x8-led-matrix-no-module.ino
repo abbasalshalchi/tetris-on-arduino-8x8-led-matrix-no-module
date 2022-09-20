@@ -151,8 +151,13 @@ class Block {
       if (Py >= 0) {   //avoid spawnkill
         for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1)if (StillMatrix[Py + i + 3][Px + j + 1] == 1) {
                 for (int i = 0; i < 4; i++)for (int j = 0; j < 4; j++)if (BlockMap[i][j] == 1) StillMatrix[i + Py + 2][j + Px + 1] = 1;
+                Px = 2;
+                Py = -1;
+                VerifyLose();
+                SetBlockMap(blockmapout[random(7)]);
               }
         RowChecking();
+        VerifyLose();
       }
     }
     void SetBlockMap(bool blockMap[4][4]) {
@@ -204,7 +209,8 @@ void setup() {
   randomSeed(56);
   Lost = 0;
   FrameFlag = 0;
-  pinMode(1, INPUT);
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
   pinMode(A4, INPUT);
   pinMode(A5, INPUT);
   pinMode(R1, OUTPUT);
@@ -240,6 +246,9 @@ void setup() {
   digitalWrite(C6, LOW);
   digitalWrite(C7, LOW);
   digitalWrite(C8, LOW);
+
+  digitalWrite(0, LOW);
+  digitalWrite(1, LOW);
 }
 
 
@@ -270,8 +279,18 @@ void Set_LED_in_Active_Row(int column, int state) {
 //    4
 //functions
 void MoveBlock(bool frame) {
+  static bool flag = 0;
   if (frame) {
     block.GShow();
+//    if (flag) {
+//      digitalWrite(0, LOW);
+//      digitalWrite(1, LOW);
+//      flag = 0;
+//    } else {
+//      digitalWrite(0, HIGH);
+//      digitalWrite(1, HIGH);
+//      flag = 1;
+//    }
   }
   if (RightStick.CButton()) {
     block.RightShow();
@@ -301,7 +320,6 @@ void loop() {
       //frame show
     }
   } else {
-    if (DownStick.CButton())Lost = 0;
     for (int i = 0; i < 9; i++)for (int j = 0; j < 8; j++) {
         if (lostBlinkFlag < lostBlinkDuration / 2) {
           Matrix[i][j] = LostMatrix[i][j];
@@ -313,6 +331,7 @@ void loop() {
         if (lostBlinkFlag > lostBlinkDuration - 1)lostBlinkFlag = 0;
         StillMatrix[i + 1][j + 1] = 0;
       }
+    if (DownStick.CButton())Lost = 0;
   }
   for (int j = 0; j < 8; j++) {//stuff for showing
     SelectRow(j + 1);
